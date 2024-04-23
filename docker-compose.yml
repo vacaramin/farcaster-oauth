@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  redis:
+    image: "redis:7.2-alpine"
+    restart: unless-stopped
+    command: --save 1 1 --loglevel warning --maxmemory-policy noeviction
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+  relay:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.relay
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - RELAY_SERVER_HOST=0.0.0.0
+      - LOG_LEVEL=info
+    ports:
+      - "8000:8000"
+
+volumes:
+  redis-data:
